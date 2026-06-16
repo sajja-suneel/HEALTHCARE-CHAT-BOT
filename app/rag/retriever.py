@@ -1,5 +1,6 @@
 from qdrant_client import QdrantClient
-from app.rag.embedding import get_embedding
+from qdrant_client.models import Prefetch, FusionQuery, Fusion, SparseVector
+from app.rag.embedding import get_dense_embedding, get_sparse_embedding
 from app.config.settings import (
     COLLECTION_NAME,
     QDRANT_URL,
@@ -17,27 +18,45 @@ client = QdrantClient(
 
 def retrieve_context(
     question,
-    TOP_K=TOP_K,
-    score_threshold=SCORE_THRESHOLD
+    TOP_K=TOP_K
+    
 ):
     """
-    Retrieves relevant document chunks from Qdrant based on the user's question,
-    limiting the results to TOP_K and filtering by score_threshold.
+    Retrieves relevant document chunks from Qdrant using Hybrid Search
+    (combining dense semantics and sparse keywords using RRF).
     """
     logger.info(f"User Query: {question}")
-    query_embedding = get_embedding(question)
-    logger.info("Searching Qdrant...")
+    dense_embedding = get_dense_embedding(question)
+    sparse_emb = get_sparse_embedding(question)
+    
+    logger.info("Searching Qdrant using Hybrid Search (RRF)...")
     try:
-        # Query Qdrant passing both TOP_K (limit) and score_threshold
         search_result = client.query_points(
             collection_name=COLLECTION_NAME,
-            query=query_embedding,
-            limit=TOP_K,
-            score_threshold=score_threshold
+            prefetch=[
+                # Sub-query 1: Dense Semantic Search
+                Prefetch(
+                    query=dense_embedding,
+                    using="dense",
+                    limit=TOP_K
+                ),
+                # Sub-query 2: Sparse Keyword Search
+                Prefetch(
+                    query=SparseVector(
+                        indices=sparse_emb["indices"],
+                        values=sparse_emb["values"]
+                    ),
+                    using="sparse",
+                    limit=TOP_K
+                )
+            ],
+            # Combine the rankings from both queries using Reciprocal Rank Fusion (RRF)
+            query=FusionQuery(fusion=Fusion.RRF),
+            limit=TOP_K
         )
         results = search_result.points
         logger.info(
-            f"Retrieved {len(results)} search results"
+            f"Retrieved {len(results)} hybrid search results"
         )
     except Exception as e:
         logger.error(f"Search error: {e}")
@@ -50,12 +69,9 @@ def retrieve_context(
             "score",
             0.0
         )
-        # Apply threshold check locally as a safety measure
-        if score < score_threshold:
-            continue
-        
+        # Note: Bypassing score threshold check because Hybrid Search uses RRF,
+        # which produces rank-based scores that do not correspond to standard Cosine similarity thresholds.
         if result.payload:
-            # Extract 'page' and 'source' from top-level payload or nested 'metadata' dictionary
             payload_metadata = result.payload.get("metadata", {})
             if not isinstance(payload_metadata, dict):
                 payload_metadata = {}
@@ -65,10 +81,7 @@ def retrieve_context(
 
             retrieved_docs.append(
                 {
-                    "text": result.payload.get(
-                        "text",
-                        ""
-                    ),
+                    "text": result.payload.get("text", ""),
                     "page": page,
                     "source": source,
                     "score": round(score, 4)

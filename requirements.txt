@@ -14,3 +14,4 @@ pymupdf ==7.1.1
 pandas ==2.0.3
 python-docx== 0.8.11
 pymongo== 4.3.3
+fastembed==0.1.0
