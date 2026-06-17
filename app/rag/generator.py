@@ -80,8 +80,9 @@ def generate_answer(question, session_id=None):
             }
         }
 
+        # Prepend source file and page metadata so the LLM knows which file each chunk belongs to
     context = "\n\n".join(
-        doc["text"]
+        f"[Source Document: {doc.get('source', 'Unknown')}, Page: {doc.get('page', 'Unknown')}]\nText: {doc['text']}"
         for doc in docs
     )
 
@@ -160,6 +161,7 @@ def generate_answer(question, session_id=None):
             ) if scores else 0,
             "embedding_model": "all-MiniLM-L6-v2",
             "embedding_dimension": 384,
+            "source": doc.get("source", "Unknown"),
             "chunks": chunk_details
         }  
 

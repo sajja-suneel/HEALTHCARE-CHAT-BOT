@@ -5,7 +5,7 @@ from app.config.settings import (
     COLLECTION_NAME,
     QDRANT_URL,
     QDRANT_API_KEY,
-    SCORE_THRESHOLD,
+    
     TOP_K,
 )
 from app.rag.log import logger
@@ -18,7 +18,7 @@ client = QdrantClient(
 
 def retrieve_context(
     question,
-    TOP_K=TOP_K
+    TOP_K=TOP_K,
     
 ):
     """
@@ -89,6 +89,6 @@ def retrieve_context(
             )
 
     logger.info(
-        f"Retrieved {len(retrieved_docs)} chunks after threshold filtering"
+        f"Retrieved {len(retrieved_docs)} chunks after RRF filtering"
     )
     return retrieved_docs
