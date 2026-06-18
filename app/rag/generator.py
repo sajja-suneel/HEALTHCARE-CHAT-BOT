@@ -150,17 +150,7 @@ def generate_answer(question, session_id=None):
             "session_id": session_id,
             "question": question,
             "standalone_question": standalone_question,
-            "response_time_ms": total_time,
-            "retrieval_time_ms": retrieval_time,
-            "generation_time_ms": generation_time,
             "chunk_count": len(docs),
-            "max_score": max(scores) if scores else 0,
-            "avg_score": round(
-                sum(scores) / len(scores),
-                4
-            ) if scores else 0,
-            "embedding_model": "all-MiniLM-L6-v2",
-            "embedding_dimension": 384,
             "source": doc.get("source", "Unknown"),
             "chunks": chunk_details
         }  
