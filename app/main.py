@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from app.api import health, chat, upload
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load env variables
 load_dotenv()
@@ -73,6 +74,18 @@ def custom_openapi():
 
 # Assign the custom openapi schema generator
 app.openapi = custom_openapi
+
+
+# ==========================================================
+# CORS
+# ==========================================================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 
 # -------------------------

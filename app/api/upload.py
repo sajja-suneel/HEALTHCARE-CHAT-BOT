@@ -81,3 +81,19 @@ async def upload_multiple_files(
         "message": f"Successfully uploaded {len(files)} files. RAG indexing started.",
         "files": saved_files,
     }
+
+@router.get("/files")
+def list_uploaded_files():
+    pdf_dir = "data/pdfs"
+    if not os.path.exists(pdf_dir):
+        return []
+    
+    files_list = []
+    for filename in os.listdir(pdf_dir):
+        file_path = os.path.join(pdf_dir, filename)
+        if os.path.isfile(file_path):
+            files_list.append({
+                "filename": filename,
+                "size": os.path.getsize(file_path)
+            })
+    return files_list

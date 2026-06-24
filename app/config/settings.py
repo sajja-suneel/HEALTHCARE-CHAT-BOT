@@ -3,7 +3,7 @@ import os
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
@@ -22,5 +22,5 @@ EMBEDDING_MODEL = os.getenv(
     "all-MiniLM-L6-v2"
 )
 
-TOP_K = 3
+TOP_K = 5
 SCORE_THRESHOLD = 0.40

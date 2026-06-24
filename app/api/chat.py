@@ -1,40 +1,27 @@
+# C:\Users\sajja\vscode\health\backend\app\api\chat.py
 import uuid
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from app.rag.generator import generate_answer
+from app.rag.generator import generate_answer_stream
 
 router = APIRouter()
 
-# Schema is clean - only contains 'question'
 class ChatRequest(BaseModel):
     question: str
+    session_id: str = None  # Accept active session ID from frontend
 
 @router.post("/chat")
 def chat(request: ChatRequest):
-    # Generates a fresh, unique session for every single query
-    # This keeps history isolated and prevents any pollution
-    session_id = str(uuid.uuid4())
+    session_id = request.session_id or str(uuid.uuid4())
     
-    result = generate_answer(
-        request.question,
-        session_id=session_id
+    # Return StreamingResponse with SSE and non-buffering headers
+    return StreamingResponse(
+        generate_answer_stream(request.question, session_id=session_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
     )
-
-    answer = result.get(
-        "answer",
-        "No answer generated"
-    )
-
-    if len(answer) > 1000:
-        answer = answer[:997] + "..."
-
-    metadata = result.get(
-        "metadata",
-        {}
-    )
-
-    return {
-        "question": request.question,
-        "answer": answer,
-        "metadata": metadata
-    }
