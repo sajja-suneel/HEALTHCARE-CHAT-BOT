@@ -15,7 +15,7 @@ class ChatRequest(BaseModel):
 def chat(request: ChatRequest):
     session_id = request.session_id or str(uuid.uuid4())
     
-    # Return StreamingResponse with SSE and non-buffering headers
+    # Return StreamingResponse with Server-Sent Events (SSE)
     return StreamingResponse(
         generate_answer_stream(request.question, session_id=session_id),
         media_type="text/event-stream",

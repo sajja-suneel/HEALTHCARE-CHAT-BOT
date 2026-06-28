@@ -1,7 +1,8 @@
+# C:\Users\sajja\vscode\health\backend\app\main.py
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
-from app.api import health, chat, upload
+from app.api import health, chat, upload, auth
 from fastapi.middleware.cors import CORSMiddleware
 
 # Load env variables
@@ -18,8 +19,7 @@ app = FastAPI(
 app.include_router(health.router)
 app.include_router(upload.router)
 app.include_router(chat.router)
-
-
+app.include_router(auth.router)
 
 # -------------------------
 # Custom OpenAPI Schema Overrider (Fixes Multiple File Upload in Swagger UI)
@@ -75,7 +75,6 @@ def custom_openapi():
 # Assign the custom openapi schema generator
 app.openapi = custom_openapi
 
-
 # ==========================================================
 # CORS
 # ==========================================================
@@ -86,7 +85,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
 
 # -------------------------
 # Run Server

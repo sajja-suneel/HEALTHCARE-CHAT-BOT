@@ -15,3 +15,4 @@ pandas ==2.0.3
 python-docx== 0.8.11
 pymongo== 4.3.3
 fastembed==0.1.0
+redis==5.0.1
